@@ -13,11 +13,16 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
+import base.Donnee;
+
+import java.sql.*;
+
 import model.Mesure;
+import view.ConsoleGUI;
 
 /**
  * <p>
- * Le cont&ocirc;lleur :
+ * Le controlleur :
  * </p>
  * <ol>
  * <li>lit les mesures de température dans un fichier texte</li>
@@ -25,7 +30,7 @@ import model.Mesure;
  * </li>
  * </ol>
  * 
- * @author Jérôme Valenti
+ * @author Jérôme Valenti et Julien Guilet
  * @version 2.0.0
  *
  */
@@ -37,18 +42,60 @@ public class Controller {
 	 * </p>
 	 */
 	private ArrayList<Mesure> lesMesures = new ArrayList<Mesure>();
-
-	public Controller() throws ParseException {
-
-		lireCSV("data\\mesures.csv");
+	
+	//Connection à la BDD
+	private Donnee BDD = new Donnee();
+	
+	public Controller() throws ParseException, SQLException {
+		
+		
+		ArrayList<String> stades = BDD.SelectAllStadiums();
+		lesMesures = BDD.SelectMesuresStadium(stades.get(0));
+		//lireCSV("data\\mesures.csv");
 	}
 
+	
+	
+	/**
+	 * Renvoie le nombre de zone présente dans le stade mis en paramètre
+	 * @param String 
+	 * @return int
+	 * @throws SQLException 
+	 * 
+	 */
+	
+	public int getNbZone(String stade) throws SQLException{
+		int a = BDD.NbZoneStade(stade);
+		return a;
+	}
+		
+	/**
+	 * <p>Renvoie une liste de mesure concernant un stade mis en paramètre </p>
+	 * @param String
+	 * @return ArrayList<Mesure>
+	 * @throws SQLException
+	 */
+	public ArrayList<Mesure> getMesuresStade(String stade) throws SQLException{
+		ArrayList<Mesure> tabMesure = BDD.SelectMesuresStadium(stade);
+		lesMesures = tabMesure;
+		return tabMesure;
+	}
+	
+	/**
+	 * <p>Renvoie la liste de tous les stades présent dans la BDD</p>
+	 * @return une liste de string 
+	 * @throws SQLException
+	 */
+	public ArrayList<String> getStades() throws SQLException {
+		ArrayList<String> AllStades = BDD.SelectAllStadiums();
+		return AllStades;
+	}
+	
 	/**
 	 * <p>Lit un fichier de type CSV (Comma Separated Values)</p>
 	 * <p>Le fichier contient les mesures de temp&eacute;rature de la pelouse.</p>
 	 * 
 	 * @author Jérôme Valenti
-	 * @return
 	 * @throws ParseException
 	 * @since 2.0.0
 	 */
@@ -105,8 +152,7 @@ public class Controller {
 	 * <ol>
 	 * <li>la zone (null = toutes les zones)</li>
 	 * <li>la date de d&eacute;but (null = &agrave; partir de l'origine)</li>
-	 * <li>la date de fin (null = jusqu'&agrave; la fin)<br />
-	 * </li>
+	 * <li>la date de fin (null = jusqu'&agrave; la fin)</li><br />
 	 * </ol>
 	 */
 	// public void filtrerLesMesure(String laZone, Date leDebut, Date lafin) {

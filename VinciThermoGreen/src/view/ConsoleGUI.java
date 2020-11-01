@@ -8,6 +8,11 @@ import java.awt.Font;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -36,12 +41,19 @@ import org.jfree.data.category.DefaultCategoryDataset;
 
 import control.Controller;
 import model.Mesure;
+import base.Donnee;
+import java.awt.List;
+import java.awt.Choice;
+import java.awt.Rectangle;
+import java.awt.ComponentOrientation;
+import java.awt.Dimension;
+import java.awt.Point;
 
 /**
- * <p>ConsoleGUI : IHM de l'application de consultation des températures</p>
+ * <p>ConsoleGUI : IHM de l'application de consultation des températures en fonction du stade selectionné</p>
  * <p>Projet Vinci Thermo Green</p>
- * @author Jérôme Valenti
- * @version 2.0.0
+ * @author Jérôme Valenti et Julien Guilet
+ * @version 3.0.0
  * @see control.Controller
  * @see model.Mesure
  */
@@ -120,6 +132,11 @@ public class ConsoleGUI extends JFrame {
 	private static Mesure uneMesure;
 	
 	/**
+	 * <p>Une liste pour recevoir tous les stades présent dans la BDD</p>
+	 */
+	private static ArrayList<String> lesStades;
+	
+	/**
 	 * <p>Pour recevoir les données collectées</p>
 	 * @see ArrayList
 	 * @see model.Mesure
@@ -143,13 +160,13 @@ public class ConsoleGUI extends JFrame {
 	 */
 	JPanel pnlBounds = new JPanel();
 
-	public ConsoleGUI() throws ParseException {
+	public ConsoleGUI() throws ParseException, SQLException {
 		//Appelle le constructeur de la classe mère
 		super();
-		control = new Controller();
+		//control = new Controller();
 		setIconImage(Toolkit.getDefaultToolkit().getImage("img\\vinci_ico.jpg"));
 		setTitle("Vinci Thermo Green");
-		setSize(712, 510);
+		setSize(712, 600);
 		setResizable(false);
 		setFont(new Font("Consolas", Font.PLAIN, 12));
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -160,7 +177,7 @@ public class ConsoleGUI extends JFrame {
 		getContentPane().setLayout(null);
 		
 		//Définit le JPanel des critères
-		pnlCriteria.setBounds(10, 10, 325, 145);
+		pnlCriteria.setBounds(10, 75, 325, 145);
 		pnlCriteria.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Filtrage", TitledBorder.LEADING, TitledBorder.TOP, null, Color.GRAY));
 		pnlCriteria.setBackground(UIManager.getColor("Label.background"));
 		pnlCriteria.setLayout(null);
@@ -189,11 +206,7 @@ public class ConsoleGUI extends JFrame {
 		//un bouchon "Quick & Dirty" pour peupler la liste déroulante
 		//TODO peupler la liste avec un équivalent à SELECT DISTINCT
 		//TODO implémenter la classe métier Zone pour peupler une JComboBox<Zone>
-		choixZone.addItem("*");
-		choixZone.addItem("01");
-		choixZone.addItem("02");
-		choixZone.addItem("03");
-		choixZone.addItem("04");
+		
 		
 		JLabel lblZone = new JLabel("Zone");
 		lblZone.setFont(new Font("Consolas", Font.PLAIN, 12));
@@ -230,11 +243,11 @@ public class ConsoleGUI extends JFrame {
 		pnlCriteria.add(lblLogoVinci);
 
 		//Définit le JScrollPane qui reçoit la JTable
-		scrollPane.setBounds(10, 160, 325, 310);
+		scrollPane.setBounds(10, 235, 325, 325);
 		pane.add(scrollPane);
 		
 		//Définit le JPanel des paramètres du graphique
-		pnlParam.setBounds(340, 10, 355, 335);
+		pnlParam.setBounds(345, 75, 355, 350);
 		pnlParam.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Graphique des temp\u00E9ratures", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(128, 128, 128)));
 		pnlParam.setBackground(UIManager.getColor("Label.background"));
 		pnlParam.setLayout(null);
@@ -255,6 +268,10 @@ public class ConsoleGUI extends JFrame {
 		pnlParam.add(choixGraphique);
 		
 		JButton btnActualiser = new JButton("Actualiser");
+		btnActualiser.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+			}
+		});
 		btnActualiser.setBounds(222, 19, 120, 23);
 		pnlParam.add(btnActualiser);
 		
@@ -301,7 +318,7 @@ public class ConsoleGUI extends JFrame {
 		pnlGraph.setLayout(null);
 		
 		//Définit le JPanel des bornes nominales
-		pnlBounds.setBounds(340, 346, 355, 124);
+		pnlBounds.setBounds(345, 436, 355, 124);
 		pnlBounds.setBorder(new TitledBorder(null, "D\u00E9bord des valeurs nominales", TitledBorder.LEADING, TitledBorder.TOP, null, Color.GRAY));
 		pnlBounds.setBackground(UIManager.getColor("Label.background"));
 		pnlBounds.setLayout(null);
@@ -331,26 +348,76 @@ public class ConsoleGUI extends JFrame {
 		lbAlerte.setIcon(new ImageIcon("img\\s_green_button.png"));
 		lbAlerte.setBounds(270, 42, 75, 75);
 		pnlBounds.add(lbAlerte);
+		
+		//Defini le JPanel du choix du stade
+		JPanel panel = new JPanel();
+		panel.setBorder(new TitledBorder(null, "Choix du stade", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		panel.setBounds(14, 11, 686, 63);
+		getContentPane().add(panel);
+		panel.setLayout(null);
+		
+		//Rentrons comme valeur la liste de tous les stades
+		Choice choiceStade = new Choice();
+		choiceStade.setBounds(10, 23, 536, 30);
+		panel.add(choiceStade);
+		choiceStade.setPreferredSize(new Dimension(200, 50));
+		for (int i = 0; i < lesStades.size(); i++) {
+			choiceStade.add(lesStades.get(i));
+		}
+		
+		//JButton permettant de selectionner les températures en fonction du nom de stade selectionné
+		JButton ValiderStade = new JButton("Valider");
+		ValiderStade.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				String nomStade = choiceStade.getSelectedItem();
+				try {
+					//Recupère les mesures du stade sélectionné
+					lesMesures = control.getMesuresStade(nomStade);
+					
+					//Construit le tableau d'objet
+					laTable = setTable(lesMesures);
+					
+					//Definit le JScrollPane qui va recevoir la JTable
+					scrollPane.setViewportView(laTable);
+					
+					//Mettre le graphique
+					setChart();
+					
+					//Insère dans le champ "zone" de l'application le nombre de zone présente dans le stade selectionné
+					int NbZone = control.getNbZone(nomStade);
+					choixZone.removeAllItems();
+					choixZone.addItem("*");
+					for (int i = 0; i < NbZone; i++) {
+						
+						choixZone.addItem(""+(i+1));
+					}
+					
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+		});
+		ValiderStade.setBounds(552, 23, 124, 23);
+		panel.add(ValiderStade);
 	}
 	
-	public static void main(String[] args)  throws ParseException {
+	
+	
+	public static void main(String[] args)  throws ParseException, SQLException {
+		
+		//Instancie un contrôleur pour prendre en charge l'IHM
+		control = new Controller();
+		
+		//Recupère tous les noms des stades
+		lesStades = control.getStades();
 		
 		//Construit et affiche l'IHM
 		ConsoleGUI monIHM = new ConsoleGUI();
 		monIHM.setLocation(100,100);
 		
-		//Instancie un contrôleur pour prendre en charge l'IHM
-		control = new Controller();
-
 		//Demande l'acquisition des data
-//		uneMesure = new Mesure();
 		lesMesures = control.getLesMesures();
-				
-		//Construit le tableau d'objet
-		laTable = setTable(lesMesures);
 		
-		//Definit le JScrollPane qui va recevoir la JTable
-		scrollPane.setViewportView(laTable);
 		
 		System.out.println("Before set chart in main()");
 		//affiche le graphique
@@ -358,6 +425,9 @@ public class ConsoleGUI extends JFrame {
 		System.out.println("After set chart in main()");
 		monIHM.setVisible(true);
 	}
+	
+	
+	
 	
 	/**
 	 * <p>Transfert les données de la collection vers un tableau d'objets</p>
@@ -464,19 +534,19 @@ public class ConsoleGUI extends JFrame {
 			uneMesure = lesMesures.get(i);
 
 			switch (uneMesure.getNumZone()) {
-			case "01":
+			case "1":
 				dataChart.addValue((Number)uneMesure.getCelsius(),uneMesure.getNumZone(),i1);
 				i1++;
 				break;
-			case "02":
+			case "2":
 				dataChart.addValue((Number)uneMesure.getCelsius(),uneMesure.getNumZone(),i2);
 				i2++;
 				break;
-			case "03":
+			case "3":
 				dataChart.addValue((Number)uneMesure.getCelsius(),uneMesure.getNumZone(),i3);
 				i3++;
 				break;
-			case "04":
+			case "4":
 				dataChart.addValue((Number)uneMesure.getCelsius(),uneMesure.getNumZone(),i4);
 				i4++;
 				break;
@@ -487,22 +557,22 @@ public class ConsoleGUI extends JFrame {
 
 		//un bouchon pour tester
 		// Set data ((Number)temp,zone,dateHeure)
-//        dataChart.addValue((Number)1.0, "01", 1);
-//        dataChart.addValue((Number)5.0, "02", 1);
-//        dataChart.addValue((Number)4.0, "01", 2);
-//        dataChart.addValue((Number)7.0, "02", 2);
-//        dataChart.addValue((Number)3.0, "01", 3);
-//        dataChart.addValue((Number)6.0, "02", 3);
-//        dataChart.addValue((Number)5.0, "01", 4);
-//        dataChart.addValue((Number)8.0, "02", 4);
-//        dataChart.addValue((Number)5.0, "01", 5);
-//        dataChart.addValue((Number)4.0, "02", 5);
-//        dataChart.addValue((Number)7.0, "01", 6);
-//        dataChart.addValue((Number)4.0, "02", 6);
-//        dataChart.addValue((Number)7.0, "01", 7);
-//        dataChart.addValue((Number)2.0, "02", 7);
-//        dataChart.addValue((Number)8.0, "01", 8);
-//        dataChart.addValue((Number)1.0, "02", 8);
+//        dataChart.addValue((Number)1.0, "1", 1);
+//        dataChart.addValue((Number)5.0, "2", 1);
+//        dataChart.addValue((Number)4.0, "1", 2);
+//        dataChart.addValue((Number)7.0, "2", 2);
+//        dataChart.addValue((Number)3.0, "1", 3);
+//        dataChart.addValue((Number)6.0, "2", 3);
+//        dataChart.addValue((Number)5.0, "1", 4);
+//        dataChart.addValue((Number)8.0, "2", 4);
+//        dataChart.addValue((Number)5.0, "1", 5);
+//        dataChart.addValue((Number)4.0, "2", 5);
+//        dataChart.addValue((Number)7.0, "1", 6);
+//        dataChart.addValue((Number)4.0, "2", 6);
+//        dataChart.addValue((Number)7.0, "1", 7);
+//        dataChart.addValue((Number)2.0, "2", 7);
+//        dataChart.addValue((Number)8.0, "1", 8);
+//        dataChart.addValue((Number)1.0, "2", 8);
 //		System.out.println(dataChart.getRowCount() + " lignes " + dataChart.getColumnCount() + " colonnes");
 		
 		JFreeChart chart = ChartFactory.createLineChart(
@@ -521,6 +591,10 @@ public class ConsoleGUI extends JFrame {
         pnlGraph.add(chartPanel);
 		System.out.println("chartPanel added to pnlGraph");
 	}
+	
+	
+	
+	
 	/**
 	 * <p>Classe interne qui gère le clique sur le bouton filtrer
 	 * @author Jérôme Valenti
