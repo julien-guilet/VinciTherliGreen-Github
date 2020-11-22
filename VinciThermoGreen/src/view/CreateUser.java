@@ -9,6 +9,8 @@ import javax.swing.JTextField;
 
 import org.jfree.ui.about.SystemPropertiesPanel;
 
+import com.sun.org.apache.xml.internal.security.keys.storage.implementations.SingleCertificateResolver;
+
 import Bcrypt.BCrypt;
 
 import javax.swing.JButton;
@@ -139,6 +141,7 @@ public class CreateUser extends JFrame{
 	/**
 	 * Cette fonction récupère toutes les informations du formulaire, hash le mot de passe envoie les informations au controlleur
 	 * @throws SQLException
+	 * @since 3.1.0
 	 */
 	public void ajoutUser() throws SQLException {
 		try {
@@ -156,23 +159,14 @@ public class CreateUser extends JFrame{
 			}
 			String mdphash = BCrypt.hashpw(mdp, BCrypt.gensalt(10));                
 			//System.out.println("identifiant: "+identifiant+" mdp: "+mdphash+" nom: "+nom+" prenom: "+prenom+" role: "+Role);
-			this.control.creationUser(identifiant, nom,  prenom,  mdphash,  Role);
+			if (this.control.creationUser(identifiant, nom,  prenom,  mdphash,  Role) == true) {
+				JOptionPane.showMessageDialog(null, "Ajout réussi !");
+			} else {
+				JOptionPane.showMessageDialog(null, "Ajout raté !");
+			}
 		} catch(Exception ex) {
 			JOptionPane.showMessageDialog(null, "Ajout raté !");
 		}
-		
-		
 	}
 	
-	/**
-	 * Lors de l'ajout d'un utilisateur affiche un message de réussite ou d'échec
-	 * @param b correspond au résultat de l'ajout d'un utilisateur
-	 */
-	public void ajout(boolean b) {
-		if (b == true) {
-			JOptionPane.showMessageDialog(null, "Ajout réussi !");
-		} else {
-			JOptionPane.showMessageDialog(null, "Ajout raté !");
-		}
-	}
 }

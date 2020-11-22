@@ -55,14 +55,11 @@ public class Login extends JFrame{
 		JButton ButtonValider = new JButton("Valider");
 		ButtonValider.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				
 				try {
 					demandeLogin();
 				} catch (SQLException | ParseException e) {
-					
 					e.printStackTrace();
 				}
-				
 			}
 		});
 		ButtonValider.setBounds(296, 251, 89, 23);
@@ -87,8 +84,8 @@ public class Login extends JFrame{
 		lblNewLabel.setBounds(184, 53, 178, 54);
 		getContentPane().add(lblNewLabel);
 		
-		JLabel lblNewLabel_1 = new JLabel("Nom de connexion");
-		lblNewLabel_1.setBounds(65, 141, 107, 14);
+		JLabel lblNewLabel_1 = new JLabel("Identifiant");
+		lblNewLabel_1.setBounds(80, 141, 107, 14);
 		getContentPane().add(lblNewLabel_1);
 		
 		JLabel lblNewLabel_2 = new JLabel("Mot de passe");
@@ -106,6 +103,7 @@ public class Login extends JFrame{
 	 * Permet de récupérer les informations de la classe et utilise la fonction demandeConn du controleur
 	 * @throws SQLException
 	 * @throws ParseException
+	 * @since 3.1.0
 	 */
 	public void demandeLogin() throws SQLException, ParseException {
 		String login;

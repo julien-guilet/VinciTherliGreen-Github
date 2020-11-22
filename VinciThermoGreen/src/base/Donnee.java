@@ -144,6 +144,7 @@ public class Donnee {
 	 * @param mdp
 	 * @return un boolean en fonction des informations mis en paramètre et en base de données
 	 * @throws SQLException
+	 * @since 3.1.0
 	 */
 	public boolean demandeConnextion(String login, String mdp) throws SQLException {
 		ResultSet resultset = null;
@@ -151,9 +152,7 @@ public class Donnee {
 				"select login, password from user where login = '" + login + "';");
 		resultset.next();
 		try {
-			String login2 = resultset.getString("login");
 			String mdp2 = resultset.getString("password");
-			//System.out.println(mdp2);
 			if (BCrypt.checkpw(mdp, mdp2) == true) {
 				return true;
 			} else {
@@ -171,15 +170,14 @@ public class Donnee {
 	 * @param login
 	 * @return le nom d'utilisateur
 	 * @throws SQLException
+	 * @since 3.1.0
 	 */
 	public String getNomUtilisateur(String login) throws SQLException {
 
 		ResultSet resultset = null;
 		resultset = statement.executeQuery("select nom, prenom from user where login = '" + login + "';");
 		resultset.next();
-
-		String nom = resultset.getString("nom") + ' ' + resultset.getString("prenom");
-		return nom;
+		return resultset.getString("nom") + ' ' + resultset.getString("prenom");
 	}
 	
 	
@@ -188,15 +186,14 @@ public class Donnee {
 	 * @param login
 	 * @return le rôle de l'utilisateur
 	 * @throws SQLException
+	 * @since 3.1.0
 	 */
 	public String getRoleUtilisateur(String login) throws SQLException {
 
 		ResultSet resultset = null;
 		resultset = statement.executeQuery("select type from user where login = '" + login + "';");
 		resultset.next();
-
-		String role = resultset.getString("type");
-		return role;
+		return resultset.getString("type");
 	}
 	
 	
@@ -209,6 +206,7 @@ public class Donnee {
 	 * @param role
 	 * @return true si l'insertion c'est bien executé et false si une erreur survient
 	 * @throws SQLException
+	 * @since 3.1.0
 	 */
 	public boolean ajoutUser(String identifiant, String nom, String prenom, String mdp, String role)
 			throws SQLException {

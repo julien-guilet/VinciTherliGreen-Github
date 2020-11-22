@@ -89,6 +89,7 @@ public class Controller {
 	/**
 	 * Cette fonction créer un objet Login et l'affiche 
 	 * @param control
+	 * @since 3.1.0
 	 */
 	public void afficheLogin(Controller control) {
 		Login log = new Login(control);
@@ -102,6 +103,7 @@ public class Controller {
 	 * @param mdp
 	 * @return boolean
 	 * @throws SQLException
+	 * @since 3.1.0
 	 */
 	public boolean demandeConn(String login, String mdp) throws SQLException{
 		return BDD.demandeConnextion(login, mdp);
@@ -109,10 +111,11 @@ public class Controller {
 	
 	
 	/**
-	 * Cette fonction intervient lorsque que la connexion est réussi est change de fenêtre
+	 * Cette fonction intervient lorsque la connexion est réussi et change de fenêtre
 	 * @param login
 	 * @throws ParseException
 	 * @throws SQLException
+	 * @since 3.1.0
 	 */
 	public void connectionReussi(String login) throws ParseException, SQLException {
 		this.login.setVisible(false);
@@ -126,6 +129,7 @@ public class Controller {
 	
 	/**
 	 * demandeDeconnexion() détruit l'appGUI en cours d'utilisation et renvoie l'utilisateur sur l'écran de connexion
+	 * @since 3.1.0
 	 */
 	public void demandeDeconnexion() {
 		appGUI.setVisible(false);
@@ -134,11 +138,11 @@ public class Controller {
 		Login log = new Login(this);
 		this.login = log;
 		this.login.setVisible(true);
-		
 	}
 	
 	/**
-	 * Ferme la fenêtre l'application appGUI et ouvre l'application CreateUser permettant d'jouter un utilisateur
+	 * Ferme la fenêtre l'application appGUI et ouvre l'application CreateUser permettant d'ajouter un utilisateur
+	 * @since 3.1.0
 	 */
 	public void afficheCreateUser() {
 		this.appGUI.setVisible(false);
@@ -155,15 +159,16 @@ public class Controller {
 	 * @param mdp mot de passe hashé du futur utilisateur
 	 * @param role du futur utilisateur
 	 * @throws SQLException
+	 * @since 3.1.0
 	 */
-	public void creationUser(String identifiant, String nom, String prenom, String mdp, String role) throws SQLException {
+	public boolean creationUser(String identifiant, String nom, String prenom, String mdp, String role) throws SQLException {
 		boolean b = this.BDD.ajoutUser(identifiant, nom, prenom, mdp, role);
-		this.createUser.ajout(b);
-		
+		return b;
 	}
 	
 	/**
 	 * Ferme la classe createUser et ouvre l'application appGUI
+	 * @since 3.1.0
 	 */
 	public void fermeCreationUser() {
 		this.createUser.setVisible(false);

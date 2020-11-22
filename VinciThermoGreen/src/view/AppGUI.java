@@ -436,7 +436,6 @@ public class AppGUI extends JFrame {
 		
 		String a ="admin";
 		if (a.equals(role)) {
-			
 			JButton btnNewButton_1 = new JButton("Cr\u00E9er un compte");
 			btnNewButton_1.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent arg0) {
@@ -446,7 +445,6 @@ public class AppGUI extends JFrame {
 			btnNewButton_1.setBounds(395, 22, 144, 23);
 			panelCompte.add(btnNewButton_1);
 		}
-		
 	}
 	
 	public void test(Controller control) throws SQLException {
@@ -554,6 +552,7 @@ public class AppGUI extends JFrame {
 
 	/**
 	 * demande une deconnection au controleur
+	 * @since 3.1.0
 	 */
 	public void deconnection() {
 		control.demandeDeconnexion();
