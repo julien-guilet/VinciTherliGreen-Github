@@ -14,11 +14,13 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import base.Donnee;
+import view.AppGUI;
 
 import java.sql.*;
 
 import model.Mesure;
-import view.ConsoleGUI;
+import view.*;
+
 
 /**
  * <p>
@@ -31,11 +33,11 @@ import view.ConsoleGUI;
  * </ol>
  * 
  * @author Jérôme Valenti et Julien Guilet
- * @version 2.0.0
+ * @version 3.1.0
  *
  */
 public class Controller {
-
+	
 	/**
 	 * <p>
 	 * Les mesures lues dans le fichier des relevés de températures
@@ -44,17 +46,129 @@ public class Controller {
 	private ArrayList<Mesure> lesMesures = new ArrayList<Mesure>();
 	
 	//Connection à la BDD
-	private Donnee BDD = new Donnee();
+	private Donnee BDD;
 	
-	public Controller() throws ParseException, SQLException {
+	private Login login;
+	
+	private AppGUI appGUI;
+	
+	private CreateUser createUser;
+	
+	public static void main(String[] args)  throws ParseException, SQLException {
+		
+		//Instancie un contrôleur pour prendre en charge l'IHM
 		
 		
-		ArrayList<String> stades = BDD.SelectAllStadiums();
-		lesMesures = BDD.SelectMesuresStadium(stades.get(0));
-		//lireCSV("data\\mesures.csv");
+		Donnee bd = new Donnee();
+		Controller control = new Controller(bd);
+		
+		control.afficheLogin(control);
+		}
+	
+	
+	
+	/**
+	 * Constructeur
+	 * @throws ParseException
+	 * @throws SQLException
+	 */
+	public Controller(Donnee bd) throws ParseException, SQLException {
+		
+		this.BDD = bd;
+		try {
+			
+			ArrayList<String> stades = BDD.SelectAllStadiums();
+			lesMesures = BDD.SelectMesuresStadium(stades.get(0));
+			
+		}catch (Exception e) {
+			System.out.println(e);
+		}
+		
 	}
-
 	
+	/**
+	 * Cette fonction créer un objet Login et l'affiche 
+	 * @param control
+	 */
+	public void afficheLogin(Controller control) {
+		Login log = new Login(control);
+		this.login = log;
+		this.login.setVisible(true);
+	}
+	
+	/**
+	 * Cette fonction est appelé lorsque qu'une demande de connexion est effectuer elle renvoie true ou false.
+	 * @param login
+	 * @param mdp
+	 * @return boolean
+	 * @throws SQLException
+	 */
+	public boolean demandeConn(String login, String mdp) throws SQLException{
+		return BDD.demandeConnextion(login, mdp);
+	}
+	
+	
+	/**
+	 * Cette fonction intervient lorsque que la connexion est réussi est change de fenêtre
+	 * @param login
+	 * @throws ParseException
+	 * @throws SQLException
+	 */
+	public void connectionReussi(String login) throws ParseException, SQLException {
+		this.login.setVisible(false);
+		String nom = BDD.getNomUtilisateur(login);
+		String role = BDD.getRoleUtilisateur(login);
+		AppGUI app = new AppGUI(this, nom, role);
+		this.appGUI = app;
+		this.appGUI.setVisible(true);
+		
+	}
+	
+	/**
+	 * demandeDeconnexion() détruit l'appGUI en cours d'utilisation et renvoie l'utilisateur sur l'écran de connexion
+	 */
+	public void demandeDeconnexion() {
+		appGUI.setVisible(false);
+		this.appGUI = null;
+		this.login = null;
+		Login log = new Login(this);
+		this.login = log;
+		this.login.setVisible(true);
+		
+	}
+	
+	/**
+	 * Ferme la fenêtre l'application appGUI et ouvre l'application CreateUser permettant d'jouter un utilisateur
+	 */
+	public void afficheCreateUser() {
+		this.appGUI.setVisible(false);
+		CreateUser u = new CreateUser(this);
+		this.createUser = u;
+		this.createUser.setVisible(true);
+	}
+	
+	/**
+	 * Cette fonction utilise la fonction ajoutUser de la classe Donnee afin de créer un utilisateur
+	 * @param identifiant du futur utilisateur
+	 * @param nom du futur utilisateur
+	 * @param prenom du futur utilisateur
+	 * @param mdp mot de passe hashé du futur utilisateur
+	 * @param role du futur utilisateur
+	 * @throws SQLException
+	 */
+	public void creationUser(String identifiant, String nom, String prenom, String mdp, String role) throws SQLException {
+		boolean b = this.BDD.ajoutUser(identifiant, nom, prenom, mdp, role);
+		this.createUser.ajout(b);
+		
+	}
+	
+	/**
+	 * Ferme la classe createUser et ouvre l'application appGUI
+	 */
+	public void fermeCreationUser() {
+		this.createUser.setVisible(false);
+		this.appGUI.setVisible(true);
+	}
 	
 	/**
 	 * Renvoie le nombre de zone présente dans le stade mis en paramètre
@@ -63,7 +177,6 @@ public class Controller {
 	 * @throws SQLException 
 	 * 
 	 */
-	
 	public int getNbZone(String stade) throws SQLException{
 		int a = BDD.NbZoneStade(stade);
 		return a;

@@ -1,5 +1,5 @@
 /**
- * @author Jérôme Valenti
+ * @author Jérôme Valenti, GUILET Julien
  */
 package view;
 import java.awt.Color;
@@ -48,6 +48,8 @@ import java.awt.Rectangle;
 import java.awt.ComponentOrientation;
 import java.awt.Dimension;
 import java.awt.Point;
+import javax.swing.border.EtchedBorder;
+import javax.swing.SwingConstants;
 
 /**
  * <p>ConsoleGUI : IHM de l'application de consultation des températures en fonction du stade selectionné</p>
@@ -57,9 +59,9 @@ import java.awt.Point;
  * @see control.Controller
  * @see model.Mesure
  */
-public class ConsoleGUI extends JFrame {
+public class AppGUI extends JFrame {
 
-	private static Controller control;
+	private Controller control;
 	/**
 	 * <p>Container intermédiaire JPanel</p>
 	 * <p>Contient les critères de filtrage des données de la table</p>
@@ -142,6 +144,10 @@ public class ConsoleGUI extends JFrame {
 	 * @see model.Mesure
 	 */
 	private static ArrayList<Mesure> lesMesures;
+	
+	private String nom;
+	
+	private String role;
 
 	/**
 	 * <p>Pour recevoir le JTable qui contient les mesures selectionnées</p>
@@ -160,24 +166,30 @@ public class ConsoleGUI extends JFrame {
 	 */
 	JPanel pnlBounds = new JPanel();
 
-	public ConsoleGUI() throws ParseException, SQLException {
+	public AppGUI(Controller con, String nomm, String rolee) throws ParseException, SQLException {
 		//Appelle le constructeur de la classe mère
 		super();
+		
+		this.nom = nomm;
+		this.role = rolee;
+		this.control = con;
+		this.lesStades = this.control.getStades();
+		
 		//control = new Controller();
 		setIconImage(Toolkit.getDefaultToolkit().getImage("img\\vinci_ico.jpg"));
 		setTitle("Vinci Thermo Green");
-		setSize(712, 600);
+		setSize(712, 658);
 		setResizable(false);
 		setFont(new Font("Consolas", Font.PLAIN, 12));
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		
+		setLocation(new Point(1000, 300));
 		//Pane pointe sur le container racine
 		Container pane = getContentPane();
 		//Fixe le Layout de la racine à Absolute
 		getContentPane().setLayout(null);
 		
 		//Définit le JPanel des critères
-		pnlCriteria.setBounds(10, 75, 325, 145);
+		pnlCriteria.setBounds(10, 140, 325, 145);
 		pnlCriteria.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Filtrage", TitledBorder.LEADING, TitledBorder.TOP, null, Color.GRAY));
 		pnlCriteria.setBackground(UIManager.getColor("Label.background"));
 		pnlCriteria.setLayout(null);
@@ -243,11 +255,11 @@ public class ConsoleGUI extends JFrame {
 		pnlCriteria.add(lblLogoVinci);
 
 		//Définit le JScrollPane qui reçoit la JTable
-		scrollPane.setBounds(10, 235, 325, 325);
+		scrollPane.setBounds(10, 296, 325, 325);
 		pane.add(scrollPane);
 		
 		//Définit le JPanel des paramètres du graphique
-		pnlParam.setBounds(345, 75, 355, 350);
+		pnlParam.setBounds(345, 140, 355, 350);
 		pnlParam.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Graphique des temp\u00E9ratures", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(128, 128, 128)));
 		pnlParam.setBackground(UIManager.getColor("Label.background"));
 		pnlParam.setLayout(null);
@@ -309,16 +321,16 @@ public class ConsoleGUI extends JFrame {
 		pnlParam.add(tempMax);
 		
 		//Définit le JPanel qui recoit le graphique
-		pnlGraph.setBorder(new TitledBorder(null, "Graphique", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		pnlGraph.setBackground(UIManager.getColor("Label.background"));
-		pnlGraph.setBounds(15, 75, 330, 215);
+		this.pnlGraph.setBorder(new TitledBorder(null, "Graphique", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		this.pnlGraph.setBackground(UIManager.getColor("Label.background"));
+		this.pnlGraph.setBounds(15, 75, 330, 215);
 		
 		//pose le pnlGraph dans le pnlParam
-		pnlParam.add(pnlGraph);
-		pnlGraph.setLayout(null);
+		pnlParam.add(this.pnlGraph);
+		this.pnlGraph.setLayout(null);
 		
 		//Définit le JPanel des bornes nominales
-		pnlBounds.setBounds(345, 436, 355, 124);
+		pnlBounds.setBounds(345, 501, 355, 124);
 		pnlBounds.setBorder(new TitledBorder(null, "D\u00E9bord des valeurs nominales", TitledBorder.LEADING, TitledBorder.TOP, null, Color.GRAY));
 		pnlBounds.setBackground(UIManager.getColor("Label.background"));
 		pnlBounds.setLayout(null);
@@ -352,7 +364,7 @@ public class ConsoleGUI extends JFrame {
 		//Defini le JPanel du choix du stade
 		JPanel panel = new JPanel();
 		panel.setBorder(new TitledBorder(null, "Choix du stade", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		panel.setBounds(14, 11, 686, 63);
+		panel.setBounds(10, 66, 686, 63);
 		getContentPane().add(panel);
 		panel.setLayout(null);
 		
@@ -399,35 +411,66 @@ public class ConsoleGUI extends JFrame {
 		});
 		ValiderStade.setBounds(552, 23, 124, 23);
 		panel.add(ValiderStade);
+		
+		JPanel panelCompte = new JPanel();
+		panelCompte.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)), "Compte " + role, TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		panelCompte.setBounds(10, 11, 675, 54);
+		getContentPane().add(panelCompte);
+		panelCompte.setLayout(null);
+		
+		
+		JLabel labelCompte = new JLabel("Vous \u00EAtes connect\u00E9 en tant que : " + this.nom);
+		labelCompte.setBounds(10, 22, 375, 22);
+		panelCompte.add(labelCompte);
+		
+		
+		JButton btnNewButton = new JButton("D\u00E9connexion");
+		btnNewButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				deconnection();
+			}
+		});
+		btnNewButton.setBounds(549, 22, 116, 23);
+		panelCompte.add(btnNewButton);
+		
+		
+		String a ="admin";
+		if (a.equals(role)) {
+			
+			JButton btnNewButton_1 = new JButton("Cr\u00E9er un compte");
+			btnNewButton_1.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent arg0) {
+					control.afficheCreateUser();
+				}
+			});
+			btnNewButton_1.setBounds(395, 22, 144, 23);
+			panelCompte.add(btnNewButton_1);
+		}
+		
 	}
 	
-	
-	
-	public static void main(String[] args)  throws ParseException, SQLException {
+	public void test(Controller control) throws SQLException {
 		
-		//Instancie un contrôleur pour prendre en charge l'IHM
-		control = new Controller();
 		
 		//Recupère tous les noms des stades
 		lesStades = control.getStades();
-		
+				
 		//Construit et affiche l'IHM
-		ConsoleGUI monIHM = new ConsoleGUI();
-		monIHM.setLocation(100,100);
-		
+				
+		this.setLocation(100,100);
+				
 		//Demande l'acquisition des data
 		lesMesures = control.getLesMesures();
+		laTable = setTable(lesMesures);
 		
-		
+		scrollPane.setViewportView(laTable);
 		System.out.println("Before set chart in main()");
 		//affiche le graphique
-		monIHM.setChart();
+		this.setChart();
 		System.out.println("After set chart in main()");
-		monIHM.setVisible(true);
+		this.setVisible(true);
+		
 	}
-	
-	
-	
 	
 	/**
 	 * <p>Transfert les données de la collection vers un tableau d'objets</p>
@@ -509,6 +552,13 @@ public class ConsoleGUI extends JFrame {
 		return uneTable;
 	}
 
+	/**
+	 * demande une deconnection au controleur
+	 */
+	public void deconnection() {
+		control.demandeDeconnexion();
+	}
+	
 	//TODO factoriser le code avec setTable
 	//TODO gérer le choix du graphique
 	/**
@@ -588,7 +638,7 @@ public class ConsoleGUI extends JFrame {
         ChartPanel chartPanel = new ChartPanel(chart);
         chartPanel.setBounds(5, 20, 320, 190);
         chartPanel.setVisible(true);
-        pnlGraph.add(chartPanel);
+        this.pnlGraph.add(chartPanel);
 		System.out.println("chartPanel added to pnlGraph");
 	}
 	
