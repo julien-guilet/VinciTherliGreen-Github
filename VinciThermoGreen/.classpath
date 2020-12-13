@@ -10,5 +10,6 @@
 	<classpathentry kind="lib" path="lib/jcommon-1.0.23/lib/junit.jar"/>
 	<classpathentry kind="lib" path="lib/jfreechart-1.0.19/jfreechart-1.0.19-demo.jar"/>
 	<classpathentry kind="lib" path="C:/Program Files (x86)/MySQL/Connector J 8.0/mysql-connector-java-8.0.22.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Julien/Desktop/twilio-8.3.0-jar-with-dependencies.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

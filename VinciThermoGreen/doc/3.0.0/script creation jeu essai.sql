@@ -1,11 +1,16 @@
-USE vincithermogreen;
+insert into  user values
+("jguilet", "$2a$10$vFUdAMCBgMmDhzSDrvwPzOiRiFxdkVIKPAO4yrw8WoRoGGCZtNCpC", "guilet", "julien", "admin", '0673313263'),
+("mguessaz", "$2a$10$vFUdAMCBgMmDhzSDrvwPzOiRiFxdkVIKPAO4yrw8WoRoGGCZtNCpC", "guessaz", "manu", "admin", '0673313263'),
+("sgrousset", "$2a$10$vFUdAMCBgMmDhzSDrvwPzOiRiFxdkVIKPAO4yrw8WoRoGGCZtNCpC", "grousset", "sylvain", "membre" ,'0673313263'),
+("mwacquiez", "$2a$10$vFUdAMCBgMmDhzSDrvwPzOiRiFxdkVIKPAO4yrw8WoRoGGCZtNCpC", "wacquiez", "max", "membre", '0673313263'),
+("amassa", "$2a$10$vFUdAMCBgMmDhzSDrvwPzOiRiFxdkVIKPAO4yrw8WoRoGGCZtNCpC", "massa", "alexis", "membre", '0673313263');
 
 INSERT INTO stade VALUES
- ('Stade de Lyon'),
- ('Stade de Paris'),
- ('Stade de Marseille');
+ ('Stade de Lyon', 50, 80, 'jguilet'),
+ ('Stade de Paris', 50, 80, 'jguilet'),
+ ('Stade de Marseille', 50, 80, 'jguilet');
 
-INSERT INTO mesure VALUES 
+INSERT INTO mesure (zone,temperature, horoDate, nomStade)VALUES 
 
 (1,72,"2020-09-2 15:00:00","Stade de Lyon"),
 (1,73,"2020-10-2 15:00:00","Stade de Lyon"),

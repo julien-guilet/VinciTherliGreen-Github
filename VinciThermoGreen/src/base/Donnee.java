@@ -13,6 +13,9 @@ import javax.swing.JOptionPane;
 
 import Bcrypt.BCrypt;
 
+import com.twilio.*;
+import com.twilio.rest.api.v2010.account.Message;
+
 /**
  * <p>
  * Donnée :
@@ -208,12 +211,12 @@ public class Donnee {
 	 * @throws SQLException
 	 * @since 3.1.0
 	 */
-	public boolean ajoutUser(String identifiant, String nom, String prenom, String mdp, String role)
+	public boolean ajoutUser(String identifiant, String nom, String prenom, String mdp, String role, String tel)
 			throws SQLException {
 		
 		try {
 
-			boolean t = statement.execute("insert into  user values('"+identifiant+"','"+mdp+"','"+nom+"','"+prenom+"','"+role+"');");
+			boolean t = statement.execute("insert into  user values('"+identifiant+"','"+mdp+"','"+nom+"','"+prenom+"','"+role+"','"+tel+"');");
 			return true;
 			
 		} catch (SQLException e) {
@@ -222,7 +225,104 @@ public class Donnee {
 		}
 
 	}
-
+	
+	
+	/**
+	 * Permet de rcupérer les valeur min et max de température en fonction du stade mis en paramètre
+	 * @param nomstade correspond au nom du stade
+	 * @return ArrayList<Float> possèdant 2 Float, le premier correspond au min et le second au max du stade
+	 * @throws SQLException
+	 */
+	public ArrayList<Float> getMinMaxTemp(String nomstade) throws SQLException{
+		ArrayList<Float> minMax = new ArrayList<>();
+		
+		ResultSet resultset = null;
+		resultset = statement.executeQuery("select temp_min, temp_max from stade where nomStade = '" + nomstade + "';");
+		resultset.next();
+		minMax.add(resultset.getFloat("temp_min"));
+		minMax.add(resultset.getFloat("temp_max"));
+		
+		
+		return minMax;
+	}
+	
+	/**
+	 * permet d'enregistrer les nouvelles valeur de min et max en fonction du stade, cela actualise également la date du changement
+	 * @param nomstade correspond au stade auquel on souhaite modifier ces informations
+	 * @param min correspond à la valeur min de température qui peut supporter le stade
+	 * @param max correspond à la valeur max de température qui peut supporter le stade
+	 * @return true, si la requête c'est bien executer. False dans le cas contraire
+	 */
+	public boolean engistreTemp(String nomstade,int min, int max) {
+		try {
+			statement.execute("  update stade set temp_min = '"+min+"' where nomStade ='"+nomstade+"';");
+			statement.execute("  update stade set temp_max = '"+max+"' where nomStade ='"+nomstade+"';");
+			statement.execute("  update stade set dateTemp = '"+java.time.LocalDate.now()+" "+java.time.LocalTime.now()+"' where nomStade ='"+nomstade+"';");
+			return true;
+		} catch(SQLException e) {
+			System.out.println(e);
+			return false;
+		}
+	}
+	
+	
+	/**
+	 * Cette fonction permet de vérifier lors de la connexion d'un utilisateur, si dans la base de donnée nous possèdons une mesure qui dépasse les minimums ou maximums de température que doit avoir un stade.
+	 * @return le nombre d'alerte collectée
+	 * @throws SQLException
+	 */
+	public int verifAlerte() throws SQLException {
+		ResultSet resultset = null;
+		int nbAlert =0;
+		ArrayList<Integer> lesMesuresAlerte = new ArrayList<>();
+		ArrayList<String> lesStadesAlerte = new ArrayList<>();
+		ArrayList<Integer> lesTemperaturesAlerte = new ArrayList<>();
+		ArrayList<Integer> lesTempMin = new ArrayList<>();
+		ArrayList<Integer> lesTempMax = new ArrayList<>();
+		ArrayList<String> lesGerants = new ArrayList<>();
+		
+		
+		resultset = statement.executeQuery("select idMesure, mesure.nomStade, mesure.temperature, temp_min, temp_max , stade.gerant from mesure"
+				 +" inner join stade on mesure.nomStade = stade.nomStade"
+				 +" where mesure.horoDate >= stade.dateTemp and (temperature < stade.temp_min OR temperature >  stade.temp_max) AND mesure.idMesure not in (select IdAlert from alerte);");
+		resultset.next();
+		try {
+			lesMesuresAlerte.add(resultset.getInt("idMesure"));
+			lesStadesAlerte.add(resultset.getString("nomStade"));
+			lesTemperaturesAlerte.add(resultset.getInt("temperature"));
+			lesTempMin.add(resultset.getInt("temp_min"));
+			lesTempMax.add(resultset.getInt("temp_max"));
+			lesGerants.add(resultset.getString("gerant"));
+			for (int i = 0; i < lesMesuresAlerte.size(); i++) {
+				
+				String message = "La mesure : "+lesMesuresAlerte.get(i)+" a été envoyé à : "+lesGerants.get(i)+" concernant le stade : "+lesStadesAlerte.get(i)+" car il possedait une temperature de : "+lesTemperaturesAlerte.get(i)+" alors que la température minimum est de : "+lesTempMin.get(i)+" et maximum de : "+lesTempMax.get(i)+".";
+				System.out.println(message);
+				statement.execute("  insert into alerte VALUES "
+						+ "("+lesMesuresAlerte.get(i)+",'"+message+"');");
+				nbAlert++;
+				
+				resultset = statement.executeQuery("select tel from user where login = '"+lesGerants.get(i)+"';");
+				resultset.next();
+				String numTel = resultset.getString("tel");
+				
+				
+				//Envoie de message avec Twilio
+				Twilio.init("ACf8bd48b1d88b4cd64938e365bd165ea7", "cabda4940afa91ef9dcae658bb0c31dd");
+				Message messagee = Message.creator(
+		        		new com.twilio.type.PhoneNumber(numTel),
+		        		new com.twilio.type.PhoneNumber("+17073407596"),
+		                message)
+		            .create();
+		        System.out.println(messagee.getSid());
+			}
+		        
+		        return nbAlert;
+		} catch(SQLException e) {
+			return nbAlert;
+		}
+	}
+	
+   
 	// Les seteurs et geteurs
 	public Connection getConnect() {
 		return connect;

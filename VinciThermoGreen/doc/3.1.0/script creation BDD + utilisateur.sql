@@ -43,7 +43,7 @@ ALTER TABLE stade
 ADD PRIMARY KEY (nomStade); 
 
 ALTER TABLE mesure
-ADD PRIMARY KEY (zone, horoDate,nomStade); 
+ADD PRIMARY KEY (zone, horoDate,nomStade,temperature); 
    
 alter table Mesure 
 ADD CONSTRAINT FK_nom_stade

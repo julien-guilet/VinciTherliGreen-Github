@@ -4,6 +4,7 @@
 package control;
 
 import java.io.BufferedReader;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -56,14 +57,15 @@ public class Controller {
 	
 	public static void main(String[] args)  throws ParseException, SQLException {
 		
-		//Instancie un contrôleur pour prendre en charge l'IHM
 		
-		
+		System.out.println("Message envoyé");
 		Donnee bd = new Donnee();
 		Controller control = new Controller(bd);
 		
 		control.afficheLogin(control);
 		}
+	
+	
 	
 	
 	
@@ -84,6 +86,27 @@ public class Controller {
 			System.out.println(e);
 		}
 		
+	}
+	
+	/**
+	 * Fair reference à verifAlert() de Donnee.java
+	 */
+	public int verifAlerte() throws SQLException {
+		return BDD.verifAlerte();
+	}
+	
+	/**
+	 * fait reference à engistreTemp(nomstade, min, max) de Donnee.java
+	 */
+	public boolean enregistreTemp(String nomstade, int min, int max) {
+		return BDD.engistreTemp(nomstade, min, max);
+	}
+	
+	/**
+	 * fait reference à getMinMaxTemp de Donnee.java
+	 */
+	public ArrayList<Float> getMinMaxTemp(String nomstade) throws SQLException{
+		return BDD.getMinMaxTemp(nomstade);
 	}
 	
 	/**
@@ -161,8 +184,8 @@ public class Controller {
 	 * @throws SQLException
 	 * @since 3.1.0
 	 */
-	public boolean creationUser(String identifiant, String nom, String prenom, String mdp, String role) throws SQLException {
-		boolean b = this.BDD.ajoutUser(identifiant, nom, prenom, mdp, role);
+	public boolean creationUser(String identifiant, String nom, String prenom, String mdp, String role, String tel) throws SQLException {
+		boolean b = this.BDD.ajoutUser(identifiant, nom, prenom, mdp, role, tel);
 		return b;
 	}
 	

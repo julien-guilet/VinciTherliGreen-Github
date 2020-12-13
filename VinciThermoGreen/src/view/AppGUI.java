@@ -24,6 +24,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
@@ -32,6 +33,8 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -40,6 +43,8 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.DefaultCategoryDataset;
 
 import control.Controller;
+import javafx.scene.control.Slider;
+import jdk.nashorn.internal.runtime.NumberToString;
 import model.Mesure;
 import base.Donnee;
 import java.awt.List;
@@ -148,7 +153,15 @@ public class AppGUI extends JFrame {
 	private String nom;
 	
 	private String role;
+	
+	private ArrayList<Float> minMaxtemp;
 
+	private static String nomStade = "";
+	private JSlider slidermin;
+	private JSlider slidermax;
+	private JLabel labelslidemin;
+	private JLabel labelslidemax;
+	
 	/**
 	 * <p>Pour recevoir le JTable qui contient les mesures selectionnées</p>
 	 */
@@ -170,10 +183,17 @@ public class AppGUI extends JFrame {
 		//Appelle le constructeur de la classe mère
 		super();
 		
+		
 		this.nom = nomm;
 		this.role = rolee;
 		this.control = con;
 		this.lesStades = this.control.getStades();
+		
+		int nbalerte = control.verifAlerte();
+		System.out.println("nb:"+nbalerte);
+		if ( nbalerte!= 0) {
+			JOptionPane.showMessageDialog(null,"Nombre d'alertes signalées : "+nbalerte);
+		}
 		
 		//control = new Controller();
 		setIconImage(Toolkit.getDefaultToolkit().getImage("img\\vinci_ico.jpg"));
@@ -336,17 +356,53 @@ public class AppGUI extends JFrame {
 		pnlBounds.setLayout(null);
 		pane.add(pnlBounds);
 		
-		JButton btnDebord = new JButton("D\u00E9bord");
-		btnDebord.setBounds(266, 15, 79, 23);
+		String a ="admin";
+		JButton btnDebord = new JButton("Changer");
+		
+		btnDebord.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				enregistrementTemp();
+			}
+		});
+		btnDebord.setBounds(258, 15, 87, 23);
 		pnlBounds.add(btnDebord);
 		
-		JSlider slider = new JSlider();
-		slider.setBounds(16, 40, 240, 25);
-		pnlBounds.add(slider);
+		JSlider sliderMin = new JSlider();
 		
-		JSlider slider_1 = new JSlider();
-		slider_1.setBounds(15, 88, 240, 25);
-		pnlBounds.add(slider_1);
+		
+		slidermin = sliderMin;
+		slidermin.setBounds(16, 40, 240, 25);
+		slidermin.isFocusable();
+		pnlBounds.add(slidermin);
+		
+		slidermin.addChangeListener(new ChangeListener(){
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				changeLabelSliderMin();
+				
+			}
+		});
+		
+		JSlider sliderMax = new JSlider();
+		slidermax = sliderMax;
+		slidermax.setBounds(15, 88, 240, 25);
+		if (a.equals(role)) {
+			sliderMin.setEnabled(true);
+			sliderMax.setEnabled(true);
+			btnDebord.setEnabled(true);
+		}else {
+			sliderMin.setEnabled(false);
+			sliderMax.setEnabled(false);
+			btnDebord.setEnabled(false);
+		}
+		pnlBounds.add(slidermax);
+		slidermax.addChangeListener(new ChangeListener(){
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				changeLabelSliderMax();
+				
+			}
+		});
 		
 		JLabel lblDebordMin = new JLabel("Minimum");
 		lblDebordMin.setBounds(15, 20, 60, 14);
@@ -360,6 +416,16 @@ public class AppGUI extends JFrame {
 		lbAlerte.setIcon(new ImageIcon("img\\s_green_button.png"));
 		lbAlerte.setBounds(270, 42, 75, 75);
 		pnlBounds.add(lbAlerte);
+		
+		JLabel labelSlideMin = new JLabel("-");
+		labelslidemin = labelSlideMin;
+		labelslidemin.setBounds(106, 24, 47, 14);
+		pnlBounds.add(labelslidemin);
+		
+		JLabel labelSlideMax = new JLabel("-");
+		labelslidemax = labelSlideMax;
+		labelslidemax.setBounds(106, 76, 47, 14);
+		pnlBounds.add(labelslidemax);
 		
 		//Defini le JPanel du choix du stade
 		JPanel panel = new JPanel();
@@ -380,9 +446,18 @@ public class AppGUI extends JFrame {
 		//JButton permettant de selectionner les températures en fonction du nom de stade selectionné
 		JButton ValiderStade = new JButton("Valider");
 		ValiderStade.addActionListener(new ActionListener() {
+			
+
 			public void actionPerformed(ActionEvent arg0) {
 				String nomStade = choiceStade.getSelectedItem();
+				
 				try {
+					AppGUI.setnomStade(nomStade);
+					minMaxtemp = control.getMinMaxTemp(nomStade);
+					String min = Float.toString(minMaxtemp.get(0));
+					labelSlideMin.setText(min);
+					String max = Float.toString(minMaxtemp.get(1));
+					labelSlideMax.setText(max);
 					//Recupère les mesures du stade sélectionné
 					lesMesures = control.getMesuresStade(nomStade);
 					
@@ -400,12 +475,12 @@ public class AppGUI extends JFrame {
 					choixZone.removeAllItems();
 					choixZone.addItem("*");
 					for (int i = 0; i < NbZone; i++) {
-						
 						choixZone.addItem(""+(i+1));
 					}
 					
 				} catch (SQLException e) {
 					e.printStackTrace();
+					
 				}
 			}
 		});
@@ -434,7 +509,7 @@ public class AppGUI extends JFrame {
 		panelCompte.add(btnNewButton);
 		
 		
-		String a ="admin";
+		
 		if (a.equals(role)) {
 			JButton btnNewButton_1 = new JButton("Cr\u00E9er un compte");
 			btnNewButton_1.addActionListener(new ActionListener() {
@@ -445,6 +520,37 @@ public class AppGUI extends JFrame {
 			btnNewButton_1.setBounds(395, 22, 144, 23);
 			panelCompte.add(btnNewButton_1);
 		}
+	}
+	
+	
+	/**
+	 * Permet d'enregistrer les nouvelles valeur min et max du stade selectionné
+	 */
+	public void enregistrementTemp() {
+		int min = slidermin.getValue();
+		int max = slidermax.getValue();
+		if (control.enregistreTemp(nomStade, min, max) == true) {
+			JOptionPane.showMessageDialog(null,"Changement réussi !");
+		} else {
+			JOptionPane.showMessageDialog(null,"Changement échoué !");
+		}
+	}
+	
+	/**
+	 * Permet d'actualiser le label au dessus du slider min 
+	 */
+	public void changeLabelSliderMin() {
+		String slidemine = Integer.toString(slidermin.getValue());
+		labelslidemin.setText(slidemine);
+		
+	}
+	
+	/**
+	 * Permet d'actualiser le label au dessus du slider max 
+	 */
+	public void changeLabelSliderMax() {
+		String slidemax = Integer.toString(slidermax.getValue());
+		labelslidemax.setText(slidemax);
 	}
 	
 	public void test(Controller control) throws SQLException {
@@ -678,5 +784,9 @@ public class AppGUI extends JFrame {
         					+ uneCollection.get(i).getHoroDate() + " | " 
         					+ uneCollection.get(i).getCelsius() );
 		} 
+	}
+	
+	public static void setnomStade(String nomStadee) {
+		nomStade = nomStadee;
 	}
 }

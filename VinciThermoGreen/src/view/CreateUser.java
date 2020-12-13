@@ -52,6 +52,7 @@ public class CreateUser extends JFrame{
 	private JPasswordField passwordField;
 	private JComboBox comboBoxRole;
 	private Controller control;
+	private JTextField textTel;
 	
 	public CreateUser(Controller conn) {
 		setTitle("Cr\u00E9ation d'un compte");
@@ -136,6 +137,15 @@ public class CreateUser extends JFrame{
 		
 		this.comboBoxRole.addItem("membre");
 		this.comboBoxRole.addItem("admin");
+		
+		textTel = new JTextField();
+		textTel.setColumns(10);
+		textTel.setBounds(92, 204, 96, 20);
+		getContentPane().add(textTel);
+		
+		JLabel lblNewLabel_2_1 = new JLabel("Tel");
+		lblNewLabel_2_1.setBounds(10, 207, 72, 14);
+		getContentPane().add(lblNewLabel_2_1);
 	}
 	
 	/**
@@ -157,9 +167,10 @@ public class CreateUser extends JFrame{
 			} else {
 				Role ="membre";
 			}
+			String tel = this.textTel.getText();
 			String mdphash = BCrypt.hashpw(mdp, BCrypt.gensalt(10));                
 			//System.out.println("identifiant: "+identifiant+" mdp: "+mdphash+" nom: "+nom+" prenom: "+prenom+" role: "+Role);
-			if (this.control.creationUser(identifiant, nom,  prenom,  mdphash,  Role) == true) {
+			if (this.control.creationUser(identifiant, nom,  prenom,  mdphash,  Role, tel) == true) {
 				JOptionPane.showMessageDialog(null, "Ajout réussi !");
 			} else {
 				JOptionPane.showMessageDialog(null, "Ajout raté !");
@@ -168,5 +179,4 @@ public class CreateUser extends JFrame{
 			JOptionPane.showMessageDialog(null, "Ajout raté !");
 		}
 	}
-	
 }
